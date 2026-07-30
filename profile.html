@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Profil Pengguna - Absensi Harian</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+
+    <style>
+        :root {
+            --bg-1: #f5f4f1;
+            --surface: rgba(255, 255, 255, 0.76);
+            --surface-solid: #ffffff;
+            --line: rgba(20, 19, 17, 0.09);
+            --line-strong: rgba(20, 19, 17, 0.16);
+            --ink: #17161a;
+            --ink-soft: #726f6a;
+            --ink-faint: #aba79f;
+            --accent-a: #17161a;
+            --accent-b: #4a4842;
+            --accent-grad: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+            --holiday: #dc2626;
+            --holiday-soft: #fef2f2;
+            --radius-lg: 26px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body {
+            background: var(--bg-1);
+            color: var(--ink);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px 14px 40px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .app-container { width: 100%; max-width: 440px; position: relative; z-index: 1; }
+
+        .top-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+
+        .back-btn {
+            background: var(--surface-solid); border: 1px solid var(--line-strong);
+            border-radius: 12px; width: 40px; height: 40px; display: flex;
+            align-items: center; justify-content: center; color: var(--ink);
+            text-decoration: none; cursor: pointer; transition: background 0.15s, transform 0.1s;
+            box-shadow: 0 4px 12px -6px rgba(23, 19, 42, 0.15); flex-shrink: 0;
+        }
+        .back-btn:hover { background: #f6f4ff; }
+        .back-btn:active { transform: scale(0.92); }
+
+        .eyebrow-group { display: flex; flex-direction: column; gap: 1px; }
+        .eyebrow-sub { font-family: 'Space Grotesk', sans-serif; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); }
+        .eyebrow-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--ink); }
+
+        /* Profile Card Styling with Black Banner & Overlapping Avatar */
+        .profile-card-preview {
+            background: #fff; border: 1px solid var(--line-strong); border-radius: var(--radius-lg);
+            overflow: hidden; margin-bottom: 14px; box-shadow: 0 16px 40px -26px rgba(23,19,42,0.25);
+        }
+        .profile-banner { height: 110px; background: radial-gradient(circle at 50% 50%, #2c2b30 0%, #17161a 100%); position: relative; }
+        .banner-glow { position: absolute; inset: 0; background: radial-gradient(circle at 75% 30%, rgba(255,255,255,0.12), transparent 70%); }
+        
+        .profile-avatar-wrapper { position: relative; padding: 0 20px; margin-top: -42px; display: flex; align-items: flex-end; justify-content: space-between; }
+        
+        .avatar-container-relative { position: relative; width: 84px; height: 84px; }
+        .profile-avatar-clickable {
+            width: 100%; height: 100%; border-radius: 50%; border: 4px solid #fff; object-fit: cover;
+            cursor: pointer; background: #e5e3db; box-shadow: 0 8px 20px rgba(0,0,0,0.18); transition: transform 0.2s;
+        }
+        .profile-avatar-clickable:hover { transform: scale(1.04); }
+
+        /* Inline Spinner Overlay for Avatar Upload */
+        .avatar-spinner-overlay {
+            position: absolute; inset: 4px; border-radius: 50%; background: rgba(0, 0, 0, 0.5);
+            display: none; align-items: center; justify-content: center; z-index: 5; backdrop-filter: blur(2px);
+        }
+        .avatar-spinner-overlay.active { display: flex; }
+        .spinner-ring {
+            width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .profile-meta { padding: 14px 20px 20px; text-align: left; }
+        .profile-spreadsheet-name {
+            font-family: 'Space Grotesk', sans-serif; font-size: 1.15rem; font-weight: 700; color: var(--ink);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px;
+        }
+        .profile-username-tag { font-size: 0.88rem; color: var(--ink-soft); font-weight: 500; margin-bottom: 14px; }
+
+        .section-container {
+            background: var(--surface-solid); border: 1px solid var(--line);
+            border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 14px;
+            box-shadow: 0 10px 30px -20px rgba(23, 19, 42, 0.15);
+        }
+        .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 0.92rem; font-weight: 700; margin-bottom: 14px; color: var(--ink); }
+
+        /* Mobile App Style Rows (Left Text, Right CTA) */
+        .settings-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 0; border-bottom: 1px solid var(--line); gap: 12px;
+        }
+        .settings-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .settings-row:first-child { padding-top: 0; }
+
+        .settings-row-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .settings-row-title { font-family: 'Space Grotesk', sans-serif; font-size: 0.92rem; font-weight: 700; color: var(--ink); }
+        .settings-row-desc { font-size: 0.78rem; color: var(--ink-soft); }
+
+        .row-cta-btn {
+            background: #f6f4ff; color: var(--ink); border: 1px solid var(--line-strong);
+            border-radius: 999px; padding: 7px 14px; font-size: 0.78rem; font-weight: 700;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+            transition: background 0.15s, border-color 0.15s; text-decoration: none;
+        }
+        .row-cta-btn:hover { background: #ece7ff; border-color: var(--accent-a); }
+        
+        /* Hapus Akun: Full Bold Red */
+        .row-cta-btn.danger { background: var(--holiday); color: #fff; border-color: var(--holiday); }
+        .row-cta-btn.danger:hover { background: #b91c1c; border-color: #b91c1c; }
+
+        /* Log Out: Outline Red */
+        .row-cta-btn.outline-danger { background: transparent; color: var(--holiday); border-color: rgba(220, 38, 38, 0.4); }
+        .row-cta-btn.outline-danger:hover { background: var(--holiday-soft); }
+
+        /* Modal & Dialog Styling */
+        .custom-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(23, 19, 42, 0.5); z-index: 1000; backdrop-filter: blur(4px);
+            justify-content: center; align-items: center;
+        }
+        .custom-overlay.active { display: flex; }
+
+        .custom-dialog {
+            background: #ffffff; width: 100%; max-width: 420px; border-radius: 26px;
+            padding: 26px 22px 30px; box-shadow: 0 20px 50px rgba(23, 19, 42, 0.25);
+            animation: scaleIn 0.2s ease; max-height: 90vh; overflow-y: auto; position: relative;
+        }
+        @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @media (max-width: 480px) {
+            .custom-overlay { align-items: flex-end; }
+            .custom-dialog { max-width: 100%; border-radius: 26px 26px 0 0; }
+        }
+
+        .dialog-close-x {
+            position: absolute; top: 20px; right: 20px; background: #f2effe; border: none;
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--ink); z-index: 10; transition: background 0.15s;
+        }
+        .dialog-close-x:hover { background: #e5e0fd; }
+
+        .dialog-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.18rem; font-weight: 700; margin-bottom: 6px; color: var(--ink); text-align: center; }
+        .dialog-subtitle { font-size: 0.86rem; color: var(--ink-soft); text-align: center; margin-bottom: 20px; }
+
+        .form-group { margin-bottom: 14px; text-align: left; }
+        .form-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); margin-bottom: 5px; display: block; }
+        .form-input {
+            width: 100%; padding: 12px 14px; background: #fbfbfa; border: 1px solid var(--line-strong);
+            border-radius: var(--radius-sm); font-size: 0.92rem; color: var(--ink); outline: none;
+        }
+        .form-input:focus { border-color: var(--accent-a); background: #fff; }
+        .form-input:disabled { background: #eeece6; color: var(--ink-soft); cursor: not-allowed; }
+
+        .btn-main {
+            width: 100%; background: var(--accent-grad); color: #fff; border: none; border-radius: var(--radius-md);
+            padding: 14px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 10px;
+            box-shadow: 0 8px 20px -8px rgba(23, 19, 42, 0.4);
+        }
+        .btn-main:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+        .btn-secondary {
+            width: 100%; background: #f2effe; color: var(--ink); border: none; border-radius: var(--radius-md);
+            padding: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 8px;
+        }
+
+        /* Instagram / WhatsApp style Fullscreen Photo Preview Modal */
+        .photo-preview-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9);
+            z-index: 2000; justify-content: center; align-items: center; flex-direction: column; padding: 20px;
+        }
+        .photo-preview-overlay.active { display: flex; }
+        .preview-img-container { position: relative; max-width: 360px; width: 100%; text-align: center; }
+        .preview-full-img { width: 100%; aspect-ratio: 1; border-radius: 20px; object-fit: cover; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .preview-close-btn {
+            position: absolute; top: -50px; right: 0; background: rgba(255,255,255,0.2); border: none;
+            color: #fff; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1.2rem; backdrop-filter: blur(4px);
+        }
+        .preview-actions { margin-top: 20px; display: flex; gap: 10px; width: 100%; max-width: 360px; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="top-bar">
+            <a href="#" id="backDashboardBtn" class="back-btn" title="Kembali ke Dashboard">
+                <iconify-icon icon="solar:alt-arrow-left-linear" width="22" height="22"></iconify-icon>
+            </a>
+            <div class="eyebrow-group">
+                <span class="eyebrow-sub">Pengaturan Akun</span>
+                <span class="eyebrow-title">Profil Pengguna</span>
+            </div>
+        </div>
+
+        <!-- Profile Card with Black Banner & Overlapping Avatar -->
+        <div class="profile-card-preview">
+            <div class="profile-banner">
+                <div class="banner-glow"></div>
+            </div>
+            <div class="profile-avatar-wrapper">
+                <div class="avatar-container-relative">
+                    <img id="profileAvatarImg" class="profile-avatar-clickable" src="" alt="Avatar" title="Klik untuk Preview Foto">
+                    <div id="avatarSpinnerOverlay" class="avatar-spinner-overlay">
+                        <div class="spinner-ring"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-meta">
+                <div class="profile-spreadsheet-name" id="displaySheetName">-</div>
+                <div class="profile-username-tag" id="displayUsernameTag">-</div>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label class="form-label">Username</label>
+                    <input type="text" id="inputUsername" class="form-input" placeholder="Username...">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label class="form-label">Spreadsheet ID (Terkunci)</label>
+                    <input type="text" id="inputSpreadsheetId" class="form-input" disabled>
+                </div>
+
+                <button type="button" class="btn-main" id="saveProfileBtn" disabled>Simpan Perubahan Profil</button>
+            </div>
+        </div>
+
+        <!-- Security & Session Settings (Left Text, Right CTA Style) -->
+        <div class="section-container">
+            <div class="section-title">Keamanan & Sesi</div>
+            
+            <div class="settings-row">
+                <div class="settings-row-info">
+                    <span class="settings-row-title">Ganti PIN</span>
+                    <span class="settings-row-desc">Perbarui 4 digit PIN rahasia</span>
+                </div>
+                <button type="button" class="row-cta-btn" id="openChangePinBtn">
+                    Ubah PIN
+                    <iconify-icon icon="solar:alt-arrow-right-linear" width="14" height="14"></iconify-icon>
+                </button>
+            </div>
+
+            <div class="settings-row" style="margin-top: 12px;">
+                <div class="settings-row-info">
+                    <span class="settings-row-title">Keluar Sesi</span>
+                    <span class="settings-row-desc">Akhiri sesi login di perangkat ini</span>
+                </div>
+                <button type="button" class="row-cta-btn outline-danger" id="logoutBtn">
+                    Keluar
+                    <iconify-icon icon="solar:logout-2-linear" width="14" height="14"></iconify-icon>
+                </button>
+            </div>
+
+            <div class="settings-row" style="margin-top: 12px;">
+                <div class="settings-row-info">
+                    <span class="settings-row-title" style="color:var(--holiday);">Hapus Akun</span>
+                    <span class="settings-row-desc">Hapus permanen dari sistem</span>
+                </div>
+                <button type="button" class="row-cta-btn danger" id="openDeleteAccountBtn">
+                    Hapus Akun
+                    <iconify-icon icon="solar:trash-bin-trash-linear" width="14" height="14"></iconify-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instagram / WhatsApp Style Fullscreen Photo Preview Modal -->
+    <div id="photoPreviewOverlay" class="photo-preview-overlay">
+        <div class="preview-img-container">
+            <button type="button" class="preview-close-btn" id="closePhotoPreviewBtn">
+                <iconify-icon icon="solar:close-circle-linear" width="24" height="24"></iconify-icon>
+            </button>
+            <img id="previewModalImg" class="preview-full-img" src="" alt="Profile Preview">
+            <div class="preview-actions">
+                <input type="file" id="changePhotoFile" accept="image/*" style="display:none;">
+                <button type="button" class="btn-main" id="triggerChangePhotoBtn" style="margin-top:0;">
+                    <iconify-icon icon="solar:camera-bold" width="18" height="18" style="vertical-align:middle; margin-right:6px;"></iconify-icon>
+                    Ganti Foto Profil
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- General Dialog Modal Overlay -->
+    <div id="modalOverlay" class="custom-overlay">
+        <div class="custom-dialog" id="modalContentBox"></div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = /api/proxy;
+        const DEFAULT_PFP = "https://i.ibb.co.com/bj8dfFkL/pfp.png";
+        let IMGBB_API_KEY = "c9aff31714dff7bf2649e15e62e1a226";
+
+        let currentSession = null;
+        let newPhotoUrlTemp = "";
+
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalContentBox = document.getElementById('modalContentBox');
+        const photoPreviewOverlay = document.getElementById('photoPreviewOverlay');
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = sessionStorage.getItem('currentSession');
+            if (!saved) {
+                window.location.href = 'index.html';
+                return;
+            }
+            currentSession = JSON.parse(saved);
+            if (!currentSession.photoUrl || currentSession.photoUrl.trim() === "") {
+                currentSession.photoUrl = DEFAULT_PFP;
+            }
+            newPhotoUrlTemp = currentSession.photoUrl;
+
+            // Render Profile Data
+            renderProfileData();
+
+            // Back button guard check
+            document.getElementById('backDashboardBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                const usernameVal = document.getElementById('inputUsername').value.trim();
+                const hasChanges = usernameVal !== currentSession.username || newPhotoUrlTemp !== currentSession.photoUrl;
+                
+                if (hasChanges) {
+                    openUnsavedChangesModal(() => {
+                        window.location.href = 'dashboard.html';
+                    });
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
+            });
+
+            // Event Listeners
+            document.getElementById('profileAvatarImg').addEventListener('click', openPhotoPreview);
+            document.getElementById('closePhotoPreviewBtn').addEventListener('click', closePhotoPreview);
+            photoPreviewOverlay.addEventListener('click', (e) => {
+                if (e.target === photoPreviewOverlay) closePhotoPreview();
+            });
+
+            document.getElementById('triggerChangePhotoBtn').addEventListener('click', () => {
+                document.getElementById('changePhotoFile').click();
+            });
+
+            document.getElementById('changePhotoFile').addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const blobUrl = URL.createObjectURL(file);
+                document.getElementById('previewModalImg').src = blobUrl;
+                document.getElementById('profileAvatarImg').src = blobUrl;
+
+                // Show inline spinner overlay on avatar
+                const spinnerOverlay = document.getElementById('avatarSpinnerOverlay');
+                spinnerOverlay.classList.add('active');
+                closePhotoPreview();
+
+                const formData = new FormData();
+                formData.append('image', file);
+                try {
+                    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+                    const data = await res.json();
+                    spinnerOverlay.classList.remove('active');
+                    if (data && data.success) {
+                        newPhotoUrlTemp = data.data.url.replace('i.ibb.co', 'i.ibb.co.com');
+                        checkProfileChanges();
+                    } else {
+                        showCustomAlert("Gagal", "Gagal mengunggah gambar ke ImgBB.");
+                    }
+                } catch (err) {
+                    spinnerOverlay.classList.remove('active');
+                    showCustomAlert("Kesalahan", "Gagal mengunggah foto.");
+                }
+            });
+
+            const usernameInput = document.getElementById('inputUsername');
+            usernameInput.addEventListener('input', () => {
+                document.getElementById('displayUsernameTag').textContent = `@${usernameInput.value.trim() || 'username'}`;
+                checkProfileChanges();
+            });
+
+            document.getElementById('saveProfileBtn').addEventListener('click', saveProfileChanges);
+            document.getElementById('openChangePinBtn').addEventListener('click', openChangePinModal);
+            document.getElementById('openDeleteAccountBtn').addEventListener('click', openDeleteAccountModal);
+            document.getElementById('logoutBtn').addEventListener('click', openLogoutModal);
+        });
+
+        function renderProfileData() {
+            document.getElementById('profileAvatarImg').src = currentSession.photoUrl;
+            document.getElementById('displaySheetName').textContent = currentSession.spreadsheetName || 'Spreadsheet Absensi';
+            document.getElementById('displayUsernameTag').textContent = `@${currentSession.username}`;
+            document.getElementById('inputUsername').value = currentSession.username;
+            document.getElementById('inputSpreadsheetId').value = currentSession.spreadsheetId;
+        }
+
+        function checkProfileChanges() {
+            const usernameVal = document.getElementById('inputUsername').value.trim();
+            const changed = usernameVal !== currentSession.username || newPhotoUrlTemp !== currentSession.photoUrl;
+            document.getElementById('saveProfileBtn').disabled = !changed;
+        }
+
+        async function saveProfileChanges() {
+            const saveBtn = document.getElementById('saveProfileBtn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = "Menyimpan...";
+
+            const newUsername = document.getElementById('inputUsername').value.trim();
+
+            try {
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: "updateProfile",
+                        oldUsername: currentSession.username,
+                        newUsername: newUsername,
+                        newSpreadsheetId: currentSession.spreadsheetId,
+                        newPhotoUrl: newPhotoUrlTemp
+                    })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    currentSession.username = result.data.username;
+                    currentSession.photoUrl = result.data.photoUrl || DEFAULT_PFP;
+                    sessionStorage.setItem('currentSession', JSON.stringify(currentSession));
+                    renderProfileData();
+                    saveBtn.textContent = "Simpan Perubahan Profil";
+                    showCustomAlert("Berhasil", "Profil berhasil diperbarui!");
+                } else {
+                    showCustomAlert("Gagal", result.message || "Gagal memperbarui profil.");
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = "Simpan Perubahan Profil";
+                }
+            } catch (err) {
+                showCustomAlert("Kesalahan", "Gagal terhubung ke server.");
+                saveBtn.disabled = false;
+                saveBtn.textContent = "Simpan Perubahan Profil";
+            }
+        }
+
+        function openPhotoPreview() {
+            document.getElementById('previewModalImg').src = newPhotoUrlTemp || currentSession.photoUrl;
+            photoPreviewOverlay.classList.add('active');
+        }
+
+        function closePhotoPreview() {
+            photoPreviewOverlay.classList.remove('active');
+        }
+
+        function openUnsavedChangesModal(onConfirmCallback) {
+            modalContentBox.innerHTML = `
+                <button type="button" class="dialog-close-x" onclick="closeModal()">
+                    <iconify-icon icon="solar:close-circle-linear" width="18" height="18"></iconify-icon>
+                </button>
+                <h2 class="dialog-title">Perubahan Belum Disimpan</h2>
+                <p class="dialog-subtitle">Anda memiliki perubahan profil yang belum disimpan. Yakin ingin meninggalkan halaman ini?</p>
+                <div style="display:flex; gap:10px; margin-top:16px;">
+                    <button type="button" class="btn-secondary" onclick="closeModal()" style="margin-top:0;">Tetap di Sini</button>
+                    <button type="button" class="btn-main" id="confirmLeaveBtn" style="margin-top:0; background:var(--holiday);">Keluar Tanpa Simpan</button>
+                </div>
+            `;
+            modalOverlay.classList.add('active');
+            document.getElementById('confirmLeaveBtn').onclick = () => {
+                closeModal();
+                if (onConfirmCallback) onConfirmCallback();
+            };
+        }
+
+        function openChangePinModal() {
+            modalContentBox.innerHTML = `
+                <button type="button" class="dialog-close-x" onclick="closeModal()">
+                    <iconify-icon icon="solar:close-circle-linear" width="18" height="18"></iconify-icon>
+                </button>
+                <h2 class="dialog-title">Ganti PIN 4 Digit</h2>
+                <p class="dialog-subtitle">Masukkan PIN lama dan PIN baru Anda</p>
+                
+                <div class="form-group">
+                    <label class="form-label">PIN Lama</label>
+                    <input type="password" id="oldPin" class="form-input" maxlength="4" placeholder="••••">
+                </div>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label class="form-label">PIN Baru (4 Digit)</label>
+                    <input type="password" id="newPin" class="form-input" maxlength="4" placeholder="••••">
+                </div>
+                <button type="button" class="btn-main" id="submitChangePinBtn">Update PIN</button>
+            `;
+            modalOverlay.classList.add('active');
+
+            document.getElementById('submitChangePinBtn').onclick = async () => {
+                const oldPin = document.getElementById('oldPin').value.trim();
+                const newPin = document.getElementById('newPin').value.trim();
+
+                if (newPin.length !== 4) {
+                    showCustomAlert("Peringatan", "PIN baru harus tepat 4 digit angka.");
+                    return;
+                }
+
+                try {
+                    const res = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            action: "changePin",
+                            username: currentSession.username,
+                            oldPin,
+                            newPin
+                        })
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        closeModal();
+                        showCustomAlert("Berhasil", "PIN berhasil diubah!");
+                    } else {
+                        showCustomAlert("Gagal", result.message || "Gagal mengubah PIN.");
+                    }
+                } catch (err) {
+                    showCustomAlert("Kesalahan", "Gagal terhubung ke server.");
+                }
+            };
+        }
+
+        function openLogoutModal() {
+            modalContentBox.innerHTML = `
+                <button type="button" class="dialog-close-x" onclick="closeModal()">
+                    <iconify-icon icon="solar:close-circle-linear" width="18" height="18"></iconify-icon>
+                </button>
+                <h2 class="dialog-title">Keluar Akun</h2>
+                <p class="dialog-subtitle">Apakah Anda yakin ingin keluar dari sesi akun ini?</p>
+                <div style="display:flex; gap:10px; margin-top:16px;">
+                    <button type="button" class="btn-secondary" onclick="closeModal()" style="margin-top:0;">Batal</button>
+                    <button type="button" class="btn-main" id="confirmLogoutBtn" style="margin-top:0;">Ya, Keluar</button>
+                </div>
+            `;
+            modalOverlay.classList.add('active');
+            document.getElementById('confirmLogoutBtn').onclick = () => {
+                sessionStorage.removeItem('currentSession');
+                window.location.href = 'index.html';
+            };
+        }
+
+        function openDeleteAccountModal() {
+            modalContentBox.innerHTML = `
+                <button type="button" class="dialog-close-x" onclick="closeModal()">
+                    <iconify-icon icon="solar:close-circle-linear" width="18" height="18"></iconify-icon>
+                </button>
+                <h2 class="dialog-title" style="color:var(--holiday);">Hapus Akun</h2>
+                <p class="dialog-subtitle">Tindakan ini permanen. Masukkan PIN Anda untuk konfirmasi.</p>
+                <form id="deleteAccountForm">
+                    <div class="form-group">
+                        <label class="form-label">PIN Konfirmasi (4 Digit)</label>
+                        <input type="password" id="delPin" class="form-input" maxlength="4" required>
+                    </div>
+                    <button type="submit" class="btn-main" style="background:var(--holiday);">Ya, Hapus Akun Saya</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Batal</button>
+                </form>
+            `;
+            modalOverlay.classList.add('active');
+
+            document.getElementById('deleteAccountForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const pin = document.getElementById('delPin').value.trim();
+
+                try {
+                    const res = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            action: "deleteAccount",
+                            username: currentSession.username,
+                            pin
+                        })
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        sessionStorage.removeItem('currentSession');
+                        closeModal();
+                        showCustomAlert("Terhapus", "Akun berhasil dihapus dari sistem.", () => {
+                            window.location.href = 'index.html';
+                        });
+                    } else {
+                        showCustomAlert("Gagal", result.message || "PIN salah atau gagal menghapus akun.");
+                    }
+                } catch (err) {
+                    showCustomAlert("Kesalahan", "Gagal terhubung ke server.");
+                }
+            });
+        }
+
+        function showCustomAlert(title, message, callback = null) {
+            modalContentBox.innerHTML = `
+                <button type="button" class="dialog-close-x" onclick="closeModal()">
+                    <iconify-icon icon="solar:close-circle-linear" width="18" height="18"></iconify-icon>
+                </button>
+                <h2 class="dialog-title">${title}</h2>
+                <p class="dialog-subtitle" style="margin-bottom:20px;">${message}</p>
+                <button type="button" class="btn-main" id="customAlertOkBtn">OK</button>
+            `;
+            modalOverlay.classList.add('active');
+            document.getElementById('customAlertOkBtn').onclick = () => {
+                closeModal();
+                if (callback) callback();
+            };
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+        }
+    </script>
+</body>
+</html>
