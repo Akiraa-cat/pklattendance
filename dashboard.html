@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dashboard Absensi - Multi Akun</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-1: #f5f4f1;
+            --surface: rgba(255, 255, 255, 0.76);
+            --surface-solid: #ffffff;
+            --line: rgba(20, 19, 17, 0.09);
+            --line-strong: rgba(20, 19, 17, 0.16);
+            --ink: #17161a;
+            --ink-soft: #726f6a;
+            --ink-faint: #aba79f;
+            --accent-a: #17161a;
+            --accent-b: #4a4842;
+            --accent-grad: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+            --weekend: #8c887f;
+            --holiday: #dc2626;
+            --holiday-soft: #fef2f2;
+            --disabled-ink: #b7b3aa;
+            --success: #16a34a;
+            --radius-lg: 26px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; }
+        body {
+            background: var(--bg-1);
+            color: var(--ink);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px 14px 40px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        body::before, body::after {
+            content: "";
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(70px);
+            z-index: 0;
+            opacity: 0.55;
+            pointer-events: none;
+        }
+        body::before { width: 340px; height: 340px; top: -120px; left: -100px; background: radial-gradient(circle, #d6d3ca, transparent 70%); }
+        body::after { width: 300px; height: 300px; bottom: -80px; right: -90px; background: radial-gradient(circle, #dedbd2, transparent 70%); }
+
+        .app-container { width: 100%; max-width: 440px; position: relative; z-index: 1; }
+
+        .eyebrow {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--accent-a);
+            margin: 4px 4px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .custom-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(23, 19, 42, 0.5); z-index: 1000; backdrop-filter: blur(4px);
+            justify-content: center; align-items: center;
+        }
+        .custom-overlay.active { display: flex; }
+
+        .custom-dialog {
+            background: #ffffff; width: 100%; max-width: 420px; border-radius: 26px;
+            padding: 26px 22px 30px; box-shadow: 0 20px 50px rgba(23, 19, 42, 0.25);
+            animation: scaleIn 0.2s ease; max-height: 90vh; overflow-y: auto; position: relative;
+        }
+        @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @media (max-width: 480px) {
+            .custom-overlay { align-items: flex-end; }
+            .custom-dialog { max-width: 100%; border-radius: 26px 26px 0 0; }
+        }
+
+        .dialog-close-x {
+            position: absolute; top: 20px; right: 20px; background: #f2effe; border: none;
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--ink); z-index: 10; transition: background 0.15s;
+        }
+        .dialog-close-x:hover { background: #e5e0fd; }
+
+        .dialog-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.18rem; font-weight: 700; margin-bottom: 6px; color: var(--ink); text-align: center; }
+        .dialog-subtitle { font-size: 0.86rem; color: var(--ink-soft); text-align: center; margin-bottom: 20px; }
+
+        .form-group { margin-bottom: 14px; text-align: left; }
+        .form-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); margin-bottom: 5px; display: block; }
+        .form-input {
+            width: 100%; padding: 12px 14px; background: #fbfbfa; border: 1px solid var(--line-strong);
+            border-radius: var(--radius-sm); font-size: 0.92rem; color: var(--ink); outline: none;
+        }
+        .form-input:focus { border-color: var(--accent-a); background: #fff; }
+        .form-input:disabled { background: #eeece6; color: var(--ink-soft); cursor: not-allowed; }
+
+        .btn-main {
+            width: 100%; background: var(--accent-grad); color: #fff; border: none; border-radius: var(--radius-md);
+            padding: 14px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 10px;
+            box-shadow: 0 8px 20px -8px rgba(23, 19, 42, 0.4);
+        }
+        .btn-main:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+        .btn-secondary {
+            width: 100%; background: #f2effe; color: var(--ink); border: none; border-radius: var(--radius-md);
+            padding: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 8px;
+        }
+        .btn-danger { background: var(--holiday-soft); color: var(--holiday); border: 1px solid rgba(220, 38, 38, 0.2); }
+
+        /* Profile Preview & Edit Modal Styling */
+        .profile-card-preview {
+            background: #fff; border: 1px solid var(--line-strong); border-radius: var(--radius-md);
+            overflow: hidden; margin-bottom: 16px; box-shadow: 0 10px 30px -15px rgba(23,19,42,0.15);
+        }
+        .profile-banner { height: 90px; background: radial-gradient(circle at 50% 50%, #2c2b30 0%, #17161a 100%); position: relative; }
+        .banner-glow { position: absolute; inset: 0; background: radial-gradient(circle at 75% 30%, rgba(255,255,255,0.12), transparent 70%); }
+        .profile-avatar-wrapper { position: relative; padding: 0 16px; margin-top: -34px; display: flex; align-items: flex-end; justify-content: space-between; }
+        .profile-avatar-clickable {
+            width: 72px; height: 72px; border-radius: 50%; border: 3px solid #fff; object-fit: cover;
+            cursor: pointer; background: #e5e3db; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.15s;
+        }
+        .profile-avatar-clickable:hover { transform: scale(1.03); }
+        .profile-meta { padding: 12px 16px 16px; text-align: left; }
+        .profile-spreadsheet-name {
+            font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--ink);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;
+        }
+        .profile-username-tag { font-size: 0.86rem; color: var(--ink-soft); font-weight: 500; }
+
+        .accordion-container { border: 1px solid var(--line-strong); border-radius: var(--radius-sm); overflow: hidden; margin-top: 12px; }
+        .accordion-header {
+            background: #fbfbfa; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.88rem; font-weight: 700; color: var(--ink); cursor: pointer; user-select: none;
+        }
+        .accordion-header:hover { background: #f2f1ec; }
+        .accordion-content { display: none; padding: 14px 16px; background: #fff; border-top: 1px solid var(--line); }
+        .accordion-content.open { display: block; }
+
+        .header-panel {
+            background: var(--surface); backdrop-filter: blur(18px); border: 1px solid var(--line-strong);
+            border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        }
+        .header-main { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .user-profile-thumb { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--line-strong); }
+        .header-text { display: flex; flex-direction: column; gap: 2px; }
+        #headerDay { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--ink); }
+        #headerDate { font-size: 0.82rem; color: var(--ink-soft); font-weight: 500; }
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+        .btn-icon {
+            background: #f2effe; border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px;
+            font-size: 0.78rem; font-weight: 600; color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none;
+        }
+
+        .calendar-container {
+            background: var(--surface-solid); border: 1px solid var(--line); border-radius: var(--radius-lg);
+            padding: 20px 18px; margin-bottom: 14px; box-shadow: 0 16px 40px -26px rgba(23, 19, 42, 0.25);
+        }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .calendar-title-group {
+            display: flex; align-items: center; gap: 6px; font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; font-weight: 600;
+            cursor: pointer; padding: 6px 8px; margin: -6px -8px; border-radius: 10px;
+        }
+        .calendar-title-group:hover { background: #f6f4ff; }
+        .nav-buttons { display: flex; gap: 6px; }
+        .nav-btn {
+            background: #f6f4ff; border: 1px solid var(--line); border-radius: 11px; width: 34px; height: 34px;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink);
+        }
+        .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        .weekdays-grid, .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; gap: 2px; }
+        .weekdays-grid { margin-bottom: 6px; font-size: 0.72rem; font-weight: 700; color: var(--ink-faint); }
+        .weekdays-grid > div.weekend-label { color: var(--weekend); }
+
+        .day-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; padding: 3px; }
+        .day-inner {
+            width: 100%; height: 100%; max-width: 40px; max-height: 40px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 500; border-radius: 999px; position: relative; cursor: pointer; color: var(--ink);
+        }
+        .day-cell.weekend .day-inner { color: var(--weekend); font-weight: 600; }
+        .day-cell:not(.disabled):not(.empty) .day-inner:hover { background: #f2effe; }
+        .day-cell.today .day-inner:not(.selected-inner) { box-shadow: inset 0 0 0 1.5px var(--accent-a); }
+        .day-inner.selected-inner { background: var(--accent-grad) !important; color: #ffffff !important; font-weight: 700; }
+        .day-cell.holiday .day-inner { color: var(--holiday); font-weight: 700; background: var(--holiday-soft); }
+        .day-cell.holiday .day-inner.selected-inner { color: #fff !important; background: var(--accent-grad) !important; }
+        .day-cell.disabled .day-inner { color: var(--disabled-ink); cursor: not-allowed; }
+        .day-cell.empty { pointer-events: none; }
+        .day-inner.missing-data { background: #f97316 !important; color: #ffffff !important; font-weight: 700; }
+
+        .dot-container { position: absolute; bottom: 4px; display: flex; gap: 3px; }
+        .indicator-dot { width: 4px; height: 4px; border-radius: 50%; }
+        .dot-data { background: var(--accent-a); }
+        .day-inner.selected-inner .dot-data { background: #ffffff; }
+        .dot-holiday { background: var(--holiday); }
+        .day-inner.selected-inner .dot-holiday { background: #ffffff; }
+
+        .legend {
+            display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: 16px; padding-top: 14px;
+            border-top: 1px solid var(--line); font-size: 0.72rem; color: var(--ink-soft);
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .legend-dot.weekend-dot { background: var(--weekend); }
+        .legend-dot.holiday-dot { background: var(--holiday); }
+        .legend-dot.missing-dot { background: #f97316; }
+
+        .info-container { background: var(--surface-solid); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 16px 18px; margin-bottom: 14px; }
+        .info-title { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-a); margin-bottom: 6px; }
+        .info-content { color: var(--ink); line-height: 1.5; word-break: break-word; font-size: 0.92rem; }
+        .info-content.muted { color: var(--ink-faint); font-style: italic; }
+        .holiday-banner {
+            margin-top: 10px; display: inline-flex; align-items: center; gap: 6px;
+            color: var(--holiday); background: var(--holiday-soft); font-weight: 600; font-size: 0.78rem; padding: 5px 10px; border-radius: 999px;
+        }
+
+        textarea {
+            width: 100%; padding: 14px 16px; background: var(--surface-solid); border: 1px solid var(--line-strong);
+            border-radius: var(--radius-md); font-size: 0.95rem; color: var(--ink); outline: none; resize: vertical; min-height: 88px; line-height: 1.5;
+        }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-submit {
+            flex: 1; background: var(--accent-grad); color: #ffffff; border: none; border-radius: var(--radius-md);
+            padding: 14px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-delete {
+            display: none; background: var(--holiday-soft); color: var(--holiday); border: 1px solid rgba(220, 38, 38, 0.2);
+            border-radius: var(--radius-md); padding: 0 18px; font-weight: 700; cursor: pointer; align-items: center; justify-content: center;
+        }
+        .hint-text { text-align: center; font-size: 0.76rem; color: var(--ink-faint); margin-top: 10px; }
+
+        .btn-spinner {
+            display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.35);
+            border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .skeleton {
+            background: linear-gradient(90deg, #e9e7e2 25%, #f5f4f1 50%, #e9e7e2 75%);
+            background-size: 200% 100%; animation: skeleton-loading 1.4s ease infinite; border-radius: 6px; color: transparent !important; user-select: none; pointer-events: none;
+        }
+        .skeleton * { visibility: hidden; }
+        @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="eyebrow">
+            <span>Absensi · Harian</span>
+            <span id="currentLoggedUser">-</span>
+        </div>
+
+        <div class="header-panel">
+            <div class="header-main">
+                <img id="headerUserAvatar" class="user-profile-thumb" src="" alt="Avatar">
+                <div class="header-text">
+                    <span id="headerDay">-</span>
+                    <span id="headerDate">-</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button type="button" class="btn-icon" id="openSettingsBtn" title="Pengaturan Akun">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9c.69 0 1.31.4 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <span>Akun</span>
+                </button>
+                <a href="stats.html" id="statsLink" class="btn-icon" title="Statistik">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span>Stats</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <div class="calendar-title-group" id="monthYearLabel" title="Bulan & Tahun">
+                    <span id="monthYearText">Juli 2026</span>
+                </div>
+                <div class="nav-buttons">
+                    <button type="button" class="nav-btn" id="prevMonthBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                    <button type="button" class="nav-btn" id="nextMonthBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                </div>
+            </div>
+
+            <div class="weekdays-grid">
+                <div class="weekend-label">Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div class="weekend-label">Sab</div>
+            </div>
+            <div class="days-grid" id="daysGrid"></div>
+
+            <div class="legend">
+                <div class="legend-item"><span class="legend-dot weekend-dot"></span>Akhir Pekan</div>
+                <div class="legend-item"><span class="legend-dot holiday-dot"></span>Libur Nasional</div>
+                <div class="legend-item"><span class="legend-dot missing-dot"></span>Belum Diisi</div>
+            </div>
+        </div>
+
+        <div class="info-container">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 6px;">
+                <div class="info-title" id="infoTitleLabel">Keterangan</div>
+                <div id="infoLastUpdated" style="font-size: 0.68rem; color: var(--ink-faint); display: none;">Terakhir diubah: -</div>
+            </div>
+            <div id="infoContent" class="info-content muted">Belum ada keterangan, silahkan tambah keterangan</div>
+            <div id="holidayBanner" class="holiday-banner" style="display: none;"></div>
+        </div>
+
+        <form id="attendanceForm">
+            <div class="form-group" style="margin-bottom: 0;">
+                <textarea id="descriptionInput" placeholder="Masukkan keterangan absensi di sini..." required></textarea>
+            </div>
+            <div class="btn-group">
+                <button type="submit" id="submitBtn" class="btn-submit" disabled>Simpan Data</button>
+                <button type="button" id="deleteBtn" class="btn-delete" title="Hapus Data">Hapus</button>
+            </div>
+            <div class="hint-text" id="hintText">Isi keterangan untuk mengaktifkan tombol simpan</div>
+        </form>
+    </div>
+
+    <div id="modalOverlay" class="custom-overlay">
+        <div class="custom-dialog" id="modalContentBox"></div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "/api/proxy";
+        const DEFAULT_PFP = "https://i.ibb.co.com/bj8dfFkL/pfp.png";
+        let IMGBB_API_KEY = "c9aff31714dff7bf2649e15e62e1a226";
+        const MIN_DATE = new Date("2026-06-30");
+        const MAX_DATE = new Date("2027-04-17");
+
+        const ID_MONTHS = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const ID_DAYS = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+
+        let currentSession = null;
+        let currentViewDate = new Date(2026, 6, 1);
+        let selectedDate = new Date(2026, 6, 1);
+        let monthDataCache = { attendance: {}, holidays: {} };
+        let originalHasData = false;
+
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalContentBox = document.getElementById('modalContentBox');
+
+        async function initDashboard() {
+            const saved = sessionStorage.getItem('currentSession');
+            if (!saved) {
+                window.location.href = 'index.html';
+                return;
+            }
+            currentSession = JSON.parse(saved);
+            if (!currentSession.photoUrl || currentSession.photoUrl.trim() === "") {
+                currentSession.photoUrl = DEFAULT_PFP;
+            }
+
+            document.getElementById('currentLoggedUser').textContent = currentSession.username;
+            document.getElementById('headerUserAvatar').src = currentSession.photoUrl;
+
+            document.getElementById('openSettingsBtn').addEventListener('click', () => { window.location.href = 'profile.html'; });
+
+            const today = new Date();
+            if (today >= MIN_DATE && today <= MAX_DATE) {
+                selectedDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                currentViewDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            } else {
+                selectedDate = new Date(2026, 6, 1);
+                currentViewDate = new Date(2026, 6, 1);
+            }
+
+            renderCalendarSkeleton();
+            document.getElementById('infoContent').textContent = "Memuat data keterangan...";
+            document.getElementById('infoContent').classList.add('skeleton');
+
+            await fetchMonthData(currentViewDate.getFullYear(), currentViewDate.getMonth());
+            document.getElementById('infoContent').classList.remove('skeleton');
+            renderCalendar();
+            updateHeaderAndInfo();
+
+            document.getElementById('prevMonthBtn').addEventListener('click', async () => {
+                currentViewDate.setMonth(currentViewDate.getMonth() - 1);
+                renderCalendarSkeleton();
+                await fetchMonthData(currentViewDate.getFullYear(), currentViewDate.getMonth());
+                renderCalendar();
+            });
+
+            document.getElementById('nextMonthBtn').addEventListener('click', async () => {
+                currentViewDate.setMonth(currentViewDate.getMonth() + 1);
+                renderCalendarSkeleton();
+                await fetchMonthData(currentViewDate.getFullYear(), currentViewDate.getMonth());
+                renderCalendar();
+            });
+
+            document.getElementById('descriptionInput').addEventListener('input', updateSubmitState);
+
+            document.getElementById('attendanceForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const descVal = document.getElementById('descriptionInput').value.trim();
+                if (!descVal) return;
+
+                const yyyy = selectedDate.getFullYear();
+                const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(selectedDate.getDate()).padStart(2, '0');
+                const dateStr = `${yyyy}-${mm}-${dd}`;
+
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="btn-spinner"></span> Menyimpan...';
+
+                try {
+                    const res = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            spreadsheetId: currentSession.spreadsheetId,
+                            date: dateStr,
+                            description: descVal,
+                            overwrite: true
+                        })
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        showCustomAlert("Berhasil", "Data absensi berhasil disimpan!");
+                        await fetchMonthData(currentViewDate.getFullYear(), currentViewDate.getMonth());
+                        renderCalendar();
+                        updateHeaderAndInfo();
+                    } else {
+                        showCustomAlert("Gagal", result.message || "Gagal menyimpan data.");
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = "Simpan Data";
+                    }
+                } catch (err) {
+                    showCustomAlert("Kesalahan", "Gagal terhubung ke server.");
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Simpan Data";
+                }
+            });
+
+            document.getElementById('deleteBtn').addEventListener('click', () => {
+                modalContentBox.innerHTML = `
+                    <button type="button" class="dialog-close-x" onclick="closeModal()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                    <h2 class="dialog-title" style="color:var(--holiday);">Konfirmasi Hapus</h2>
+                    <p class="dialog-subtitle">Apakah Anda yakin ingin menghapus keterangan absensi ini?</p>
+                    <div style="display:flex; gap:10px; margin-top:16px;">
+                        <button type="button" class="btn-secondary" onclick="closeModal()" style="margin-top:0;">Batal</button>
+                        <button type="button" class="btn-main btn-danger" id="confirmDeleteAttBtn" style="margin-top:0;">Ya, Hapus</button>
+                    </div>
+                `;
+                modalOverlay.classList.add('active');
+                document.getElementById('confirmDeleteAttBtn').onclick = async () => {
+                    closeModal();
+                    const yyyy = selectedDate.getFullYear();
+                    const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+                    const dd = String(selectedDate.getDate()).padStart(2, '0');
+                    const dateStr = `${yyyy}-${mm}-${dd}`;
+
+                    try {
+                        const res = await fetch(SCRIPT_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify({
+                                spreadsheetId: currentSession.spreadsheetId,
+                                date: dateStr,
+                                action: "delete"
+                            })
+                        });
+                        const result = await res.json();
+                        if (result.success) {
+                            showCustomAlert("Terhapus", "Keterangan absensi berhasil dihapus.");
+                            await fetchMonthData(currentViewDate.getFullYear(), currentViewDate.getMonth());
+                            renderCalendar();
+                            updateHeaderAndInfo();
+                        } else {
+                            showCustomAlert("Gagal", result.message || "Gagal menghapus.");
+                        }
+                    } catch (err) {
+                        showCustomAlert("Kesalahan", "Gagal terhubung ke server.");
+                    }
+                };
+            });
+        }
+
+        function showCustomAlert(title, message, callback = null) {
+            modalContentBox.innerHTML = `
+                <button type="button" class="dialog-close-x" onclick="closeModal()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+                <h2 class="dialog-title">${title}</h2>
+                <p class="dialog-subtitle" style="margin-bottom:20px;">${message}</p>
+                <button type="button" class="btn-main" id="customAlertOkBtn">OK</button>
+            `;
+            modalOverlay.classList.add('active');
+            document.getElementById('customAlertOkBtn').onclick = () => {
+                closeModal();
+                if (callback) callback();
+            };
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+        }
+
+        async function fetchMonthData(year, month) {
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=getMonthData&spreadsheetId=${currentSession.spreadsheetId}&year=${year}&month=${month}`);
+                const result = await res.json();
+                if (result.success && result.data) {
+                    monthDataCache = result.data;
+                } else {
+                    monthDataCache = { attendance: {}, holidays: {} };
+                }
+            } catch (err) {
+                monthDataCache = { attendance: {}, holidays: {} };
+            }
+        }
+
+        function renderCalendarSkeleton() {
+            const daysGrid = document.getElementById('daysGrid');
+            daysGrid.innerHTML = '';
+            document.getElementById('monthYearText').textContent = `${ID_MONTHS[currentViewDate.getMonth()]} ${currentViewDate.getFullYear()}`;
+            for (let i = 0; i < 31; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'day-cell';
+                const inner = document.createElement('div');
+                inner.className = 'day-inner skeleton';
+                inner.textContent = i + 1;
+                cell.appendChild(inner);
+                daysGrid.appendChild(cell);
+            }
+        }
+
+        function renderCalendar() {
+            const daysGrid = document.getElementById('daysGrid');
+            daysGrid.innerHTML = '';
+            const year = currentViewDate.getFullYear();
+            const month = currentViewDate.getMonth();
+
+            document.getElementById('monthYearText').textContent = `${ID_MONTHS[month]} ${year}`;
+
+            const prevMonthCheck = new Date(year, month - 1, 1);
+            document.getElementById('prevMonthBtn').disabled = prevMonthCheck < new Date(MIN_DATE.getFullYear(), MIN_DATE.getMonth(), 1);
+            document.getElementById('nextMonthBtn').disabled = new Date(year, month + 1, 1) > MAX_DATE;
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day-cell empty';
+                daysGrid.appendChild(emptyCell);
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                const cellDate = new Date(year, month, day);
+                const dow = cellDate.getDay();
+                const cell = document.createElement('div');
+                cell.className = 'day-cell';
+
+                const yyyy = year;
+                const mm = String(month + 1).padStart(2, '0');
+                const dd = String(day).padStart(2, '0');
+                const dateStr = `${yyyy}-${mm}-${dd}`;
+
+                const isDisabled = cellDate < MIN_DATE || cellDate > MAX_DATE;
+                const isWeekend = (dow === 0 || dow === 6);
+                if (isWeekend) cell.classList.add('weekend');
+
+                const inner = document.createElement('div');
+                inner.className = 'day-inner';
+                inner.textContent = day;
+
+                if (isDisabled) {
+                    cell.classList.add('disabled');
+                    cell.appendChild(inner);
+                } else {
+                    const isHoliday = monthDataCache.holidays && monthDataCache.holidays[dateStr];
+                    if (isHoliday) cell.classList.add('holiday');
+
+                    const today = new Date();
+                    const normalizedCellDate = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate());
+                    const normalizedToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+                    if (cellDate.toDateString() === today.toDateString()) cell.classList.add('today');
+
+                    const isPastOrToday = normalizedCellDate <= normalizedToday;
+                    const hasAttendance = monthDataCache.attendance && monthDataCache.attendance[dateStr] && monthDataCache.attendance[dateStr].hasData;
+                    const isMissingData = isPastOrToday && !isWeekend && !isHoliday && !hasAttendance;
+
+                    if (cellDate.toDateString() === selectedDate.toDateString()) {
+                        inner.classList.add('selected-inner');
+                    } else if (isMissingData) {
+                        inner.classList.add('missing-data');
+                    }
+
+                    if (hasAttendance || isHoliday) {
+                        const dotContainer = document.createElement('div');
+                        dotContainer.className = 'dot-container';
+                        if (hasAttendance) {
+                            const d1 = document.createElement('div'); d1.className = 'indicator-dot dot-data'; dotContainer.appendChild(d1);
+                        }
+                        if (isHoliday) {
+                            const d2 = document.createElement('div'); d2.className = 'indicator-dot dot-holiday'; dotContainer.appendChild(d2);
+                        }
+                        inner.appendChild(dotContainer);
+                    }
+
+                    cell.appendChild(inner);
+                    cell.addEventListener('click', () => {
+                        selectedDate = new Date(cellDate);
+                        renderCalendar();
+                        updateHeaderAndInfo();
+                    });
+                }
+                daysGrid.appendChild(cell);
+            }
+        }
+
+        function updateHeaderAndInfo() {
+            const dayName = ID_DAYS[selectedDate.getDay()];
+            const dayNum = selectedDate.getDate();
+            const monthName = ID_MONTHS[selectedDate.getMonth()];
+            const yearNum = selectedDate.getFullYear();
+
+            document.getElementById('headerDay').textContent = dayName;
+            document.getElementById('headerDate').textContent = `${dayNum} ${monthName} ${yearNum}`;
+            document.getElementById('infoTitleLabel').textContent = `Keterangan ${dayNum} ${monthName} ${yearNum}`;
+
+            const yyyy = yearNum;
+            const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const dd = String(dayNum).padStart(2, '0');
+            const dateStr = `${yyyy}-${mm}-${dd}`;
+
+            const attInfo = monthDataCache.attendance && monthDataCache.attendance[dateStr];
+            const infoContent = document.getElementById('infoContent');
+            const submitBtn = document.getElementById('submitBtn');
+            const deleteBtn = document.getElementById('deleteBtn');
+            const lastUpdatedEl = document.getElementById('infoLastUpdated');
+            const holidayBanner = document.getElementById('holidayBanner');
+
+            if (attInfo && attInfo.hasData) {
+                infoContent.textContent = attInfo.description;
+                infoContent.classList.remove('muted');
+                submitBtn.textContent = "Ubah Data";
+                deleteBtn.style.display = "flex";
+                if (attInfo.updatedAt) {
+                    lastUpdatedEl.textContent = `Terakhir diubah: ${attInfo.updatedAt}`;
+                    lastUpdatedEl.style.display = 'block';
+                } else {
+                    lastUpdatedEl.style.display = 'none';
+                }
+            } else {
+                infoContent.textContent = "Belum ada keterangan, silahkan tambah keterangan";
+                infoContent.classList.add('muted');
+                submitBtn.textContent = "Simpan Data";
+                deleteBtn.style.display = "none";
+                lastUpdatedEl.style.display = 'none';
+            }
+
+            originalHasData = !!(attInfo && attInfo.hasData);
+            document.getElementById('descriptionInput').value = '';
+            updateSubmitState();
+
+            const holidayDesc = monthDataCache.holidays && monthDataCache.holidays[dateStr];
+            if (holidayDesc) {
+                holidayBanner.textContent = `Libur Nasional: ${holidayDesc}`;
+                holidayBanner.style.display = 'inline-flex';
+            } else {
+                holidayBanner.style.display = 'none';
+            }
+        }
+
+        function updateSubmitState() {
+            const val = document.getElementById('descriptionInput').value.trim();
+            const hasValue = val.length > 0;
+            const submitBtn = document.getElementById('submitBtn');
+            const hintText = document.getElementById('hintText');
+
+            submitBtn.disabled = !hasValue;
+            hintText.textContent = !hasValue ? "Isi keterangan untuk mengaktifkan tombol simpan" : (originalHasData ? "Siap memperbarui keterangan" : "Siap menyimpan keterangan baru");
+        }
+
+        // Profile Settings Modal with Profile Preview & Edit CTA
+        function openSettingsModal() {
+            const currentPfp = currentSession.photoUrl && currentSession.photoUrl.trim() !== "" ? currentSession.photoUrl : DEFAULT_PFP;
+            modalContentBox.innerHTML = `
+                <button type="button" class="dialog-close-x" onclick="closeModal()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+                <h2 class="dialog-title">Pengaturan Akun</h2>
+                <p class="dialog-subtitle">Kelola profil dan keamanan akun Anda</p>
+
+                <form id="profileForm">
+                    <div class="profile-card-preview">
+                        <div class="profile-banner">
+                            <div class="banner-glow"></div>
+                        </div>
+                        <div class="profile-avatar-wrapper">
+                            <div style="position:relative;">
+                                <img id="setPhotoPreview" class="profile-avatar-clickable" src="${currentPfp}" alt="Avatar" title="Preview Foto Profil">
+                            </div>
+                        </div>
+                        <div class="profile-meta">
+                            <div class="profile-spreadsheet-name" id="displaySheetName" title="${currentSession.spreadsheetName || 'Spreadsheet'}">
+                                ${currentSession.spreadsheetName || 'Spreadsheet'}
+                            </div>
+                            <div class="profile-username-tag" id="displayUsernameTag">@${currentSession.username}</div>
+                        </div>
+                    </div>
+
+                    <input type="file" id="setPhotoFile" accept="image/*" style="display:none;">
+                    <input type="hidden" id="setPhotoUrl" value="${currentSession.photoUrl || DEFAULT_PFP}">
+
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" id="setUsername" class="form-input" value="${currentSession.username}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Spreadsheet ID (Terkunci)</label>
+                        <input type="text" id="setSpreadsheetId" class="form-input" value="${currentSession.spreadsheetId}" disabled>
+                    </div>
+
+                    <button type="button" class="btn-secondary" id="openChangePhotoModalBtn" style="margin-bottom:12px; background:#f2effe; color:var(--ink); font-weight:600;">
+                        Ubah Foto Profil (Ganti Gambar)
+                    </button>
+
+                    <div class="accordion-container" style="margin-bottom: 12px;">
+                        <div class="accordion-header" id="pinAccordionToggle">
+                            <span>Ganti PIN 4 Digit</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                        <div class="accordion-content" id="pinAccordionBody">
+                            <div class="form-group" style="margin-bottom:8px;">
+                                <label class="form-label">PIN Lama</label>
+                                <input type="password" id="oldPin" class="form-input" maxlength="4" placeholder="••••">
+                            </div>
+                            <div class="form-group" style="margin-bottom:12px;">
+                                <label class="form-label">PIN Baru</label>
+                                <input type="password" id="newPin" class="form-input" maxlength="4" placeholder="••••">
+                            </div>
+                            <button type="button" class="btn-secondary" id="submitChangePinBtn" style="margin-top:0; background:var(--accent-a); color:#fff;">Update PIN</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-main" id="saveProfileBtn" disabled>Save Changes</button>
+                </form>
+
+                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                    <button type="button" class="btn-secondary btn-danger" id="openDeleteAccountBtn" style="flex: 1; margin-top: 0;">Hapus Akun</button>
+                    <button type="button" class="btn-secondary" id="logoutBtn" style="flex: 1; margin-top: 0; background:#e9e7e2; color:var(--ink);">Log Out</button>
+                </div>
+            `;
+
+            modalOverlay.classList.add('active');
+
+            document.getElementById('pinAccordionToggle').addEventListener('click', () => {
+                document.getElementById('pinAccordionBody').classList.toggle('open');
+            });
+
+            const profileForm = document.getElementById('profileForm');
+            const saveBtn = document.getElementById('saveProfileBtn');
+            const usernameInput = document.getElementById('setUsername');
+            const photoUrlInput = document.getElementById('setPhotoUrl');
+            const displayTag = document.getElementById('displayUsernameTag');
+
+            function checkProfileChanges() {
+                const changed = usernameInput.value.trim() !== currentSession.username ||
+                                photoUrlInput.value.trim() !== (currentSession.photoUrl || DEFAULT_PFP);
+                saveBtn.disabled = !changed;
+            }
+
+            usernameInput.addEventListener('input', (e) => {
+                displayTag.textContent = `@${e.target.value.trim() || 'username'}`;
+                checkProfileChanges();
+            });
+
+            document.getElementById('openChangePhotoModalBtn').addEventListener('click', () => {
+                document.getElementById('setPhotoFile').click();
+            });
+
+            document.getElementById('setPhotoFile').addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const blobUrl = URL.createObjectURL(file);
+                document.getElementById('setPhotoPreview').src = blobUrl;
+                
+                const formData = new FormData();
+                formData.append('image', file);
+                try {
+                    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+                    const data = await res.json();
+                    if (data && data.success) {
+                        let modifiedUrl = data.data.url.replace('i.ibb.co', 'i.ibb.co.com');
+                        photoUrlInput.value = modifiedUrl;
+                        checkProfileChanges();
+                        showCustomAlert("Berhasil", "Foto profil baru berhasil diunggah!");
+                    } else {
+                        showCustomAlert("Gagal", "Gagal mengunggah gambar ke ImgBB.");
+                    }
+                } catch (err) {
+                    showCustomAlert("Kesalahan", "Gagal mengunggah foto.");
+                }
+            });
+
+            profileForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                saveBtn.disabled = true;
+                saveBtn.textContent = "Menyimpan...";
+
+                try {
+                    const res = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            action: "updateProfile",
+                            oldUsername: currentSession.username,
+                            newUsername: usernameInput.value.trim(),
+                            newSpreadsheetId: currentSession.spreadsheetId,
+                            newPhotoUrl: photoUrlInput.value.trim()
+                        })
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        currentSession.username = result.data.username;
+                        currentSession.photoUrl = result.data.photoUrl || DEFAULT_PFP;
+                        sessionStorage.setItem('currentSession', JSON.stringify(currentSession));
+                        document.getElementById('currentLoggedUser').textContent = currentSession.username;
+                        document.getElementById('headerUserAvatar').src = currentSession.photoUrl;
+                        closeModal();
+                        showCustomAlert("Berhasil", "Profil berhasil diperbarui!");
+                    } else {
+                        showCustomAlert("Gagal", result.message || "Gagal memperbarui profil.");
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = "Save Changes";
+                    }
+                } catch (err) {
+                    showCustomAlert("Kesalahan", "Gagal terhubung ke server.");
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = "Save Changes";
+                }
+            });
+
+            document.getElementById('submitChangePinBtn').addEventListener('click', async () => {
+                const oldPin = document.getElementById('oldPin').value.trim();
+                const newPin = document.getElementById('newPin').value.trim();
+
+                if (newPin.length !== 4) {
+                    showCustomAlert("Peringatan", "PIN baru harus 4 digit angka.");
+                    return;
+                }
+
+                try {
+                    const res = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            action: "changePin",
+                            username: currentSession.username,
+                            oldPin,
+                            newPin
+                        })
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        showCustomAlert("Berhasil", "PIN berhasil diubah!");
+                        document.getElementById('oldPin').value = "";
+                        document.getElementById('newPin').value = "";
+                        document.getElementById('pinAccordionBody').classList.remove('open');
+                    } else {
+                        showCustomAlert("Gagal", result.message || "Gagal mengubah PIN.");
+                    }
+                } catch (err) {
+                    showCustomAlert("Kesalahan", "Gagal terhubung ke server.");
+                }
+            });
+
+            document.getElementById('openDeleteAccountBtn').addEventListener('click', openDeleteAccountModal);
+            
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                modalContentBox.innerHTML = `
+                    <button type="button" class="dialog-close-x" onclick="openSettingsModal()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                    <h2 class="dialog-title">Keluar Akun</h2>
+                    <p class="dialog-subtitle">Apakah Anda yakin ingin keluar dari sesi akun ini?</p>
+                    <div style="display:flex; gap:10px; margin-top:16px;">
+                        <button type="button" class="btn-secondary" onclick="openSettingsModal()" style="margin-top:0;">Batal</button>
+                        <button type="button" class="btn-main" id="confirmLogoutBtn" style="margin-top:0;">Ya, Keluar</button>
+                    </div>
+                `;
+                document.getElementById('confirmLogoutBtn').onclick = () => {
+                    sessionStorage.removeItem('currentSession');
+                    window.location.href = 'index.html';
+                };
+            });
+        }
+
+        function openDeleteAccountModal() {
+            modalContentBox.innerHTML = `
+                <button type="button" class="dialog-close-x" onclick="openSettingsModal()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+                <h2 class="dialog-title" style="color:var(--holiday);">Hapus Akun</h2>
+                <p class="dialog-subtitle">Tindakan ini permanen. Masukkan PIN Anda untuk konfirmasi penghapusan akun.</p>
+                <form id="deleteAccountForm">
+                    <div class="form-group">
+                        <label class="form-label">PIN Konfirmasi (4 Digit)</label>
+                        <input type="password" id="delPin" class="form-input" maxlength="4" required>
+                    </div>
+                    <button type="submit" class="btn-main btn-danger">Ya, Hapus Akun Saya</button>
+                    <button type="button" class="btn-secondary" onclick="openSettingsModal()">Batal</button>
+                </form>
+            `;
+
+            document.getElementById('deleteAccountForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const pin = document.getElementById('delPin').value.trim();
+
+                try {
+                    const res = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            action: "deleteAccount",
+                            username: currentSession.username,
+                            pin
+                        })
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        sessionStorage.removeItem('currentSession');
+                        closeModal();
+                        showCustomAlert("Terhapus", "Akun berhasil dihapus dari sistem.", () => {
+                            window.location.href = 'index.html';
+                        });
+                    } else {
+                        showCustomAlert("Gagal", result.message || "PIN salah atau gagal menghapus akun.");
+                    }
+                } catch (err) {
+                    showCustomAlert("Kesalahan", "Gagal terhubung ke server.");
+                }
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
