@@ -62,7 +62,6 @@
         .eyebrow-sub { font-family: 'Space Grotesk', sans-serif; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); }
         .eyebrow-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--ink); }
 
-        /* Profile Card Styling with Black Banner & Overlapping Avatar */
         .profile-card-preview {
             background: #fff; border: 1px solid var(--line-strong); border-radius: var(--radius-lg);
             overflow: hidden; margin-bottom: 14px; box-shadow: 0 16px 40px -26px rgba(23,19,42,0.25);
@@ -79,7 +78,6 @@
         }
         .profile-avatar-clickable:hover { transform: scale(1.04); }
 
-        /* Inline Spinner Overlay for Avatar Upload */
         .avatar-spinner-overlay {
             position: absolute; inset: 4px; border-radius: 50%; background: rgba(0, 0, 0, 0.5);
             display: none; align-items: center; justify-content: center; z-index: 5; backdrop-filter: blur(2px);
@@ -105,7 +103,6 @@
         }
         .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 0.92rem; font-weight: 700; margin-bottom: 14px; color: var(--ink); }
 
-        /* Mobile App Style Rows (Left Text, Right CTA) */
         .settings-row {
             display: flex; align-items: center; justify-content: space-between;
             padding: 12px 0; border-bottom: 1px solid var(--line); gap: 12px;
@@ -125,15 +122,12 @@
         }
         .row-cta-btn:hover { background: #ece7ff; border-color: var(--accent-a); }
         
-        /* Hapus Akun: Full Bold Red */
         .row-cta-btn.danger { background: var(--holiday); color: #fff; border-color: var(--holiday); }
         .row-cta-btn.danger:hover { background: #b91c1c; border-color: #b91c1c; }
 
-        /* Log Out: Outline Red */
         .row-cta-btn.outline-danger { background: transparent; color: var(--holiday); border-color: rgba(220, 38, 38, 0.4); }
         .row-cta-btn.outline-danger:hover { background: var(--holiday-soft); }
 
-        /* Modal & Dialog Styling */
         .custom-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(23, 19, 42, 0.5); z-index: 1000; backdrop-filter: blur(4px);
@@ -169,6 +163,7 @@
             width: 100%; padding: 12px 14px; background: #fbfbfa; border: 1px solid var(--line-strong);
             border-radius: var(--radius-sm); font-size: 0.92rem; color: var(--ink); outline: none;
         }
+        .form-input.error { border-color: var(--holiday); background: var(--holiday-soft); }
         .form-input:disabled { background: #eeece6; color: var(--ink-soft); cursor: not-allowed; }
         .input-icon-right {
             position: absolute; right: 12px; background: none; border: none; cursor: pointer; color: var(--ink-soft);
@@ -188,7 +183,6 @@
             padding: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 8px;
         }
 
-        /* Instagram / WhatsApp style Fullscreen Photo Preview Modal */
         .photo-preview-overlay {
             display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9);
             z-index: 2000; justify-content: center; align-items: center; flex-direction: column; padding: 20px;
@@ -217,7 +211,6 @@
             </div>
         </div>
 
-        <!-- Profile Card with Black Banner & Overlapping Avatar -->
         <div class="profile-card-preview">
             <div class="profile-banner">
                 <div class="banner-glow"></div>
@@ -253,7 +246,6 @@
             </div>
         </div>
 
-        <!-- Security & Session Settings (Left Text, Right CTA Style) -->
         <div class="section-container">
             <div class="section-title">Keamanan & Sesi</div>
             
@@ -338,22 +330,19 @@
             }
             newPhotoUrlTemp = currentSession.photoUrl;
 
-            // Render Profile Data
             renderProfileData();
 
-            // Toggle Spreadsheet ID visibility
-                const toggleSheetIdBtn = document.getElementById('toggleSpreadsheetIdBtn');
-                const inputSpreadsheetId = document.getElementById('inputSpreadsheetId');
-                const sheetIdIcon = document.getElementById('spreadsheetIdIcon');
-                let isSheetIdVisible = false;
-                
-                toggleSheetIdBtn.addEventListener('click', () => {
-                    isSheetIdVisible = !isSheetIdVisible;
-                    inputSpreadsheetId.type = isSheetIdVisible ? 'text' : 'password';
-                    sheetIdIcon.setAttribute('icon', isSheetIdVisible ? 'solar:eye-linear' : 'solar:eye-closed-linear');
-                });
+            const toggleSheetIdBtn = document.getElementById('toggleSpreadsheetIdBtn');
+            const inputSpreadsheetId = document.getElementById('inputSpreadsheetId');
+            const sheetIdIcon = document.getElementById('spreadsheetIdIcon');
+            let isSheetIdVisible = false;
+            
+            toggleSheetIdBtn.addEventListener('click', () => {
+                isSheetIdVisible = !isSheetIdVisible;
+                inputSpreadsheetId.type = isSheetIdVisible ? 'text' : 'password';
+                sheetIdIcon.setAttribute('icon', isSheetIdVisible ? 'solar:eye-linear' : 'solar:eye-closed-linear');
+            });
 
-            // Back button guard check
             document.getElementById('backDashboardBtn').addEventListener('click', (e) => {
                 e.preventDefault();
                 const usernameVal = document.getElementById('inputUsername').value.trim();
@@ -368,7 +357,6 @@
                 }
             });
 
-            // Event Listeners
             document.getElementById('profileAvatarImg').addEventListener('click', openPhotoPreview);
             document.getElementById('closePhotoPreviewBtn').addEventListener('click', closePhotoPreview);
             photoPreviewOverlay.addEventListener('click', (e) => {
@@ -386,7 +374,6 @@
                 document.getElementById('previewModalImg').src = blobUrl;
                 document.getElementById('profileAvatarImg').src = blobUrl;
 
-                // Show inline spinner overlay on avatar
                 const spinnerOverlay = document.getElementById('avatarSpinnerOverlay');
                 spinnerOverlay.classList.add('active');
                 closePhotoPreview();
@@ -514,44 +501,91 @@
                     <label class="form-label">PIN Lama</label>
                     <input type="password" inputmode="numeric" id="oldPin" class="form-input" maxlength="4" placeholder="••••">
                 </div>
-                <div class="form-group" style="margin-bottom:16px;">
+                <div class="form-group">
                     <label class="form-label">PIN Baru (4 Digit)</label>
                     <input type="password" inputmode="numeric" id="newPin" class="form-input" maxlength="4" placeholder="••••">
                 </div>
-                <button type="button" class="btn-main" id="submitChangePinBtn">Update PIN</button>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label class="form-label">Konfirmasi PIN Baru</label>
+                    <input type="password" inputmode="numeric" id="confirmPin" class="form-input" maxlength="4" placeholder="••••">
+                </div>
+                <button type="button" class="btn-main" id="submitChangePinBtn">Lanjutkan</button>
             `;
             modalOverlay.classList.add('active');
 
-            document.getElementById('submitChangePinBtn').onclick = async () => {
+            document.getElementById('submitChangePinBtn').onclick = () => {
                 const oldPin = document.getElementById('oldPin').value.trim();
                 const newPin = document.getElementById('newPin').value.trim();
+                const confirmPin = document.getElementById('confirmPin').value.trim();
+                const oldPinInput = document.getElementById('oldPin');
+                const newPinInput = document.getElementById('newPin');
+                const confirmPinInput = document.getElementById('confirmPin');
 
+                // Reset error states
+                oldPinInput.classList.remove('error');
+                newPinInput.classList.remove('error');
+                confirmPinInput.classList.remove('error');
+
+                if (oldPin.length !== 4) {
+                    oldPinInput.classList.add('error');
+                    showCustomAlert("Peringatan", "PIN lama harus tepat 4 digit angka.", openChangePinModal);
+                    return;
+                }
                 if (newPin.length !== 4) {
-                    showCustomAlert("Peringatan", "PIN baru harus tepat 4 digit angka.");
+                    newPinInput.classList.add('error');
+                    showCustomAlert("Peringatan", "PIN baru harus tepat 4 digit angka.", openChangePinModal);
+                    return;
+                }
+                if (newPin !== confirmPin) {
+                    confirmPinInput.classList.add('error');
+                    showCustomAlert("Peringatan", "Konfirmasi PIN baru tidak cocok.", openChangePinModal);
                     return;
                 }
 
-                try {
-                    const res = await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({
-                            action: "changePin",
-                            username: currentSession.username,
-                            oldPin,
-                            newPin
-                        })
-                    });
-                    const result = await res.json();
-                    if (result.success) {
-                        closeModal();
-                        showCustomAlert("Berhasil", "PIN berhasil diubah!");
-                    } else {
-                        showCustomAlert("Gagal", result.message || "Gagal mengubah PIN.");
+                // Konfirmasi Dialog Action
+                modalContentBox.innerHTML = `
+                    <button type="button" class="dialog-close-x" onclick="closeModal()">
+                        <iconify-icon icon="solar:close-circle-linear" width="18" height="18"></iconify-icon>
+                    </button>
+                    <h2 class="dialog-title">Konfirmasi Ganti PIN</h2>
+                    <p class="dialog-subtitle">Apakah Anda yakin ingin memperbarui PIN keamanan akun Anda?</p>
+                    <div style="display:flex; gap:10px; margin-top:16px;">
+                        <button type="button" class="btn-secondary" id="backToPinFormBtn" style="margin-top:0;">Kembali</button>
+                        <button type="button" class="btn-main" id="confirmUpdatePinBtn" style="margin-top:0;">Ya, Ganti PIN</button>
+                    </div>
+                `;
+
+                document.getElementById('backToPinFormBtn').onclick = openChangePinModal;
+
+                document.getElementById('confirmUpdatePinBtn').onclick = async () => {
+                    const confirmBtn = document.getElementById('confirmUpdatePinBtn');
+                    confirmBtn.disabled = true;
+                    confirmBtn.textContent = "Memproses...";
+
+                    try {
+                        const res = await fetch(SCRIPT_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify({
+                                action: "changePin",
+                                username: currentSession.username,
+                                oldPin,
+                                newPin
+                            })
+                        });
+                        const result = await res.json();
+                        if (result.success) {
+                            closeModal();
+                            showCustomAlert("Berhasil", "PIN berhasil diubah!");
+                        } else {
+                            // Jika PIN lama salah (mengembalikan error dari backend), buka kembali form dengan indikator error
+                            showCustomAlert("Gagal", result.message || "PIN lama salah.", openChangePinModal);
+                            document.getElementById('oldPin').classList.add('error');
+                        }
+                    } catch (err) {
+                        showCustomAlert("Kesalahan", "Gagal terhubung ke server.", openChangePinModal);
                     }
-                } catch (err) {
-                    showCustomAlert("Kesalahan", "Gagal terhubung ke server.");
-                }
+                };
             };
         }
 
@@ -564,7 +598,7 @@
                 <p class="dialog-subtitle">Apakah Anda yakin ingin keluar dari sesi akun ini?</p>
                 <div style="display:flex; gap:10px; margin-top:16px;">
                     <button type="button" class="btn-secondary" onclick="closeModal()" style="margin-top:0;">Batal</button>
-                    <button type="button" class="btn-main" id="confirmLogoutBtn" style="margin-top:0;">Ya, Keluar</button>
+                    <button type="button" class="btn-main" id="confirmLogoutBtn" style="margin-top:0; background:var(--holiday);">Ya, Keluar</button>
                 </div>
             `;
             modalOverlay.classList.add('active');
@@ -584,7 +618,7 @@
                 <form id="deleteAccountForm">
                     <div class="form-group">
                         <label class="form-label">PIN Konfirmasi (4 Digit)</label>
-                        <input type="password" id="delPin" class="form-input" maxlength="4" required>
+                        <input type="password" inputmode="numeric" id="delPin" class="form-input" maxlength="4" required>
                     </div>
                     <button type="submit" class="btn-main" style="background:var(--holiday);">Ya, Hapus Akun Saya</button>
                     <button type="button" class="btn-secondary" onclick="closeModal()">Batal</button>
