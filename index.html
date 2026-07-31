@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pilih Akun - Absensi Harian</title>
+    <title>Presensi Aksa PKL</title>
     <link rel="icon" type="image/png" href="https://i.ibb.co.com/bj8dfFkL/pfp.png">
     <link rel="shortcut icon" type="image/png" href="https://i.ibb.co.com/bj8dfFkL/pfp.png">
     <link rel="apple-touch-icon" href="https://i.ibb.co.com/bj8dfFkL/pfp.png">
@@ -329,14 +329,15 @@
                     <p class="dialog-subtitle">Masukkan 4 digit PIN rahasia untuk masuk</p>
                 </div>
                 
-                <div class="pin-dots-container" id="pinDotsContainer">
+                <div class="pin-dots-container" id="pinDotsContainer" style="cursor: pointer;">
                     <div class="pin-dot" id="dot0"></div>
                     <div class="pin-dot" id="dot1"></div>
                     <div class="pin-dot" id="dot2"></div>
                     <div class="pin-dot" id="dot3"></div>
                 </div>
 
-                <input type="password" id="realPinInput" maxlength="4" class="hidden-pin-input" autofocus>
+                <!-- Menggunakan inputmode numeric dan type tel agar keyboard angka muncul di mobile dan backspace berfungsi dengan benar -->
+                <input type="tel" inputmode="numeric" id="realPinInput" maxlength="4" class="hidden-pin-input" autocomplete="one-time-code">
                 <div id="pinErrorMsg" style="color:var(--holiday); font-size:0.82rem; text-align:center; margin-bottom:12px; font-weight:600; display:none;"></div>
 
                 <button type="button" class="btn-main" id="submitPinBtn" disabled>Verifikasi PIN</button>
@@ -346,16 +347,19 @@
             const realInput = document.getElementById('realPinInput');
             const submitBtn = document.getElementById('submitPinBtn');
             const errorMsg = document.getElementById('pinErrorMsg');
+            const pinDotsContainer = document.getElementById('pinDotsContainer');
 
             setTimeout(() => realInput.focus(), 100);
             modalContentBox.onclick = () => realInput.focus();
+            pinDotsContainer.onclick = () => realInput.focus();
 
             let currentPinValue = "";
             const timeouts = {};
 
             realInput.addEventListener('input', (e) => {
+                // Hanya ambil angka dan batasi maksimal 4 digit
                 const val = e.target.value.replace(/\D/g, '').slice(0, 4);
-                e.target.value = val;
+                realInput.value = val; // Sinkronisasi kembali nilai input asli
                 currentPinValue = val;
 
                 for (let i = 0; i < 4; i++) {
@@ -374,6 +378,19 @@
                     }
                 }
                 submitBtn.disabled = val.length !== 4;
+            });
+
+            // Mendukung tombol backspace secara eksplisit untuk menghapus digit terakhir
+            realInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace') {
+                    if (currentPinValue.length > 0) {
+                        currentPinValue = currentPinValue.slice(0, -1);
+                        realInput.value = currentPinValue;
+                        // Memicu event input secara manual agar UI kotak dot ikut ter-update
+                        realInput.dispatchEvent(new Event('input'));
+                    }
+                    e.preventDefault();
+                }
             });
 
             submitBtn.addEventListener('click', async () => {
@@ -437,12 +454,12 @@
 
                     <div class="form-group">
                         <label class="form-label">PIN 4 Digit Angka</label>
-                        <input type="password" id="regPin" class="form-input" maxlength="4" placeholder="••••" required>
+                        <input type="password" inputmode="numeric" id="regPin" class="form-input" maxlength="4" placeholder="••••" required>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Konfirmasi PIN 4 Digit</label>
-                        <input type="password" id="regConfirmPin" class="form-input" maxlength="4" placeholder="••••" required>
+                        <input type="password" inputmode="numeric" id="regConfirmPin" class="form-input" maxlength="4" placeholder="••••" required>
                     </div>
 
                     <div class="form-group">
