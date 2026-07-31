@@ -164,13 +164,19 @@
 
         .form-group { margin-bottom: 14px; text-align: left; }
         .form-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); margin-bottom: 5px; display: block; }
+        .form-input-wrapper { position: relative; display: flex; align-items: center; }
         .form-input {
             width: 100%; padding: 12px 14px; background: #fbfbfa; border: 1px solid var(--line-strong);
             border-radius: var(--radius-sm); font-size: 0.92rem; color: var(--ink); outline: none;
         }
-        .form-input:focus { border-color: var(--accent-a); background: #fff; }
         .form-input:disabled { background: #eeece6; color: var(--ink-soft); cursor: not-allowed; }
-
+        .input-icon-right {
+            position: absolute; right: 12px; background: none; border: none; cursor: pointer; color: var(--ink-soft);
+            display: flex; align-items: center; justify-content: center; padding: 4px;
+        }
+        .input-icon-right:hover { color: var(--ink); }
+        .form-input:focus { border-color: var(--accent-a); background: #fff; }
+        
         .btn-main {
             width: 100%; background: var(--accent-grad); color: #fff; border: none; border-radius: var(--radius-md);
             padding: 14px; font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 10px;
@@ -234,8 +240,13 @@
                 </div>
 
                 <div class="form-group" style="margin-bottom: 14px;">
-                    <label class="form-label">Spreadsheet ID (Terkunci)</label>
-                    <input type="text" id="inputSpreadsheetId" class="form-input" disabled>
+                    <label class="form-label">Spreadsheet ID</label>
+                    <div class="form-input-wrapper">
+                        <input type="password" id="inputSpreadsheetId" class="form-input" disabled style="padding-right: 42px;">
+                        <button type="button" class="input-icon-right" id="toggleSpreadsheetIdBtn" title="Tampilkan/Sembunyikan ID">
+                            <iconify-icon id="spreadsheetIdIcon" icon="solar:eye-closed-linear" width="20" height="20"></iconify-icon>
+                        </button>
+                    </div>
                 </div>
 
                 <button type="button" class="btn-main" id="saveProfileBtn" disabled>Simpan Perubahan Profil</button>
@@ -329,6 +340,18 @@
 
             // Render Profile Data
             renderProfileData();
+
+            // Toggle Spreadsheet ID visibility
+                const toggleSheetIdBtn = document.getElementById('toggleSpreadsheetIdBtn');
+                const inputSpreadsheetId = document.getElementById('inputSpreadsheetId');
+                const sheetIdIcon = document.getElementById('spreadsheetIdIcon');
+                let isSheetIdVisible = false;
+                
+                toggleSheetIdBtn.addEventListener('click', () => {
+                    isSheetIdVisible = !isSheetIdVisible;
+                    inputSpreadsheetId.type = isSheetIdVisible ? 'text' : 'password';
+                    sheetIdIcon.setAttribute('icon', isSheetIdVisible ? 'solar:eye-linear' : 'solar:eye-closed-linear');
+                });
 
             // Back button guard check
             document.getElementById('backDashboardBtn').addEventListener('click', (e) => {
