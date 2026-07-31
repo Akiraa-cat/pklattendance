@@ -151,14 +151,39 @@
         .dialog-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.18rem; font-weight: 700; margin-bottom: 6px; color: var(--ink); text-align: center; }
         .dialog-subtitle { font-size: 0.86rem; color: var(--ink-soft); text-align: center; margin-bottom: 20px; }
 
-        .pin-dots-container { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; }
+        /* PIN Dots & Animation Styles */
+        .pin-dots-container { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; transition: opacity 0.2s; }
         .pin-dot {
             width: 48px; height: 48px; border: 2px solid var(--line-strong); border-radius: 12px;
             display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700;
-            background: #fbfbfa; color: var(--ink); transition: border-color 0.15s, background 0.15s;
+            background: #fbfbfa; color: var(--ink); transition: border-color 0.15s, background 0.15s, color 0.15s;
         }
         .pin-dot.filled { border-color: var(--accent-a); background: #fff; }
+        
+        /* State Error / Shake */
+        .pin-dots-container.error .pin-dot {
+            border-color: var(--holiday) !important;
+            background: var(--holiday-soft) !important;
+            color: var(--holiday) !important;
+        }
+        .shake-animation {
+            animation: shake 0.5s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
         .hidden-pin-input { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
+
+        /* Loading Overlay Container PIN */
+        .pin-loading-wrapper { position: relative; transition: opacity 0.2s; }
+        .pin-loading-overlay {
+            position: absolute; inset: 0; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(2px);
+            display: none; align-items: center; justify-content: center; z-index: 5; border-radius: 16px;
+        }
+        .pin-loading-overlay.active { display: flex; }
 
         .form-group { margin-bottom: 14px; text-align: left; }
         .form-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); margin-bottom: 5px; display: block; }
@@ -176,8 +201,8 @@
         }
         .btn-main:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
         .btn-spinner {
-            display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.35);
-            border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite;
+            display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(23, 19, 42, 0.35);
+            border-top-color: var(--ink); border-radius: 50%; animation: spin 0.7s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -329,37 +354,45 @@
                     <p class="dialog-subtitle">Masukkan 4 digit PIN rahasia untuk masuk</p>
                 </div>
                 
-                <div class="pin-dots-container" id="pinDotsContainer" style="cursor: pointer;">
-                    <div class="pin-dot" id="dot0"></div>
-                    <div class="pin-dot" id="dot1"></div>
-                    <div class="pin-dot" id="dot2"></div>
-                    <div class="pin-dot" id="dot3"></div>
+                <div class="pin-loading-wrapper">
+                    <div class="pin-loading-overlay" id="pinLoadingOverlay">
+                        <div class="btn-spinner"></div>
+                    </div>
+                    <div class="pin-dots-container" id="pinDotsContainer" style="cursor: pointer;">
+                        <div class="pin-dot" id="dot0"></div>
+                        <div class="pin-dot" id="dot1"></div>
+                        <div class="pin-dot" id="dot2"></div>
+                        <div class="pin-dot" id="dot3"></div>
+                    </div>
                 </div>
 
-                <!-- Menggunakan inputmode numeric dan type tel agar keyboard angka muncul di mobile dan backspace berfungsi dengan benar -->
                 <input type="tel" inputmode="numeric" id="realPinInput" maxlength="4" class="hidden-pin-input" autocomplete="one-time-code">
-                <div id="pinErrorMsg" style="color:var(--holiday); font-size:0.82rem; text-align:center; margin-bottom:12px; font-weight:600; display:none;"></div>
-
-                <button type="button" class="btn-main" id="submitPinBtn" disabled>Verifikasi PIN</button>
+                <div id="pinErrorMsg" style="color:var(--holiday); font-size:0.82rem; text-align:center; margin-bottom:4px; font-weight:600; display:none;"></div>
             `;
 
             modalOverlay.classList.add('active');
             const realInput = document.getElementById('realPinInput');
-            const submitBtn = document.getElementById('submitPinBtn');
             const errorMsg = document.getElementById('pinErrorMsg');
             const pinDotsContainer = document.getElementById('pinDotsContainer');
+            const pinLoadingOverlay = document.getElementById('pinLoadingOverlay');
 
             setTimeout(() => realInput.focus(), 100);
             modalContentBox.onclick = () => realInput.focus();
             pinDotsContainer.onclick = () => realInput.focus();
 
             let currentPinValue = "";
+            let isVerifying = false;
             const timeouts = {};
 
             realInput.addEventListener('input', (e) => {
-                // Hanya ambil angka dan batasi maksimal 4 digit
+                if (isVerifying) return;
+
+                // Jika sebelumnya ada error/shake, reset styling ke kondisi normal saat user mulai mengetik ulang
+                pinDotsContainer.classList.remove('error', 'shake-animation');
+                errorMsg.style.display = 'none';
+
                 const val = e.target.value.replace(/\D/g, '').slice(0, 4);
-                realInput.value = val; // Sinkronisasi kembali nilai input asli
+                realInput.value = val;
                 currentPinValue = val;
 
                 for (let i = 0; i < 4; i++) {
@@ -370,39 +403,47 @@
                         dot.textContent = val[i];
                         timeouts[i] = setTimeout(() => {
                             dot.textContent = '•';
-                        }, 3000);
+                        }, 1000); // Delay 1 detik per angka
                     } else {
                         dot.classList.remove('filled');
                         dot.textContent = '';
                         if (timeouts[i]) clearTimeout(timeouts[i]);
                     }
                 }
-                submitBtn.disabled = val.length !== 4;
+
+                // Otomatis validasi ketika digit pas 4
+                if (val.length === 4) {
+                    executeAutoVerify(val);
+                }
             });
 
-            // Mendukung tombol backspace secara eksplisit untuk menghapus digit terakhir
             realInput.addEventListener('keydown', (e) => {
+                if (isVerifying) return;
                 if (e.key === 'Backspace') {
+                    pinDotsContainer.classList.remove('error', 'shake-animation');
+                    errorMsg.style.display = 'none';
+
                     if (currentPinValue.length > 0) {
                         currentPinValue = currentPinValue.slice(0, -1);
                         realInput.value = currentPinValue;
-                        // Memicu event input secara manual agar UI kotak dot ikut ter-update
                         realInput.dispatchEvent(new Event('input'));
                     }
                     e.preventDefault();
                 }
             });
 
-            submitBtn.addEventListener('click', async () => {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="btn-spinner"></span> Memverifikasi...';
+            async function executeAutoVerify(pinVal) {
+                isVerifying = true;
+                realInput.blur();
+                pinLoadingOverlay.classList.add('active');
+                pinDotsContainer.style.opacity = '0.3';
                 errorMsg.style.display = 'none';
 
                 try {
                     const res = await fetch(SCRIPT_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({ action: "verifyPin", username: account.username, pin: currentPinValue })
+                        body: JSON.stringify({ action: "verifyPin", username: account.username, pin: pinVal })
                     });
                     const result = await res.json();
 
@@ -417,25 +458,40 @@
                             window.location.href = 'dashboard.html';
                         });
                     } else {
+                        // PIN Salah: Ubah border/kotak jadi merah, bergetar (shake), dan tampilkan pesan
+                        pinLoadingOverlay.classList.remove('active');
+                        pinDotsContainer.style.opacity = '1';
+                        pinDotsContainer.classList.add('error', 'shake-animation');
+
                         errorMsg.textContent = result.message || "PIN salah.";
                         errorMsg.style.display = 'block';
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = "Verifikasi PIN";
+
+                        // Hapus kelas animasi shake setelah selesai agar bisa dipicu ulang nanti
+                        setTimeout(() => {
+                            pinDotsContainer.classList.remove('shake-animation');
+                        }, 500);
+
+                        // Reset input PIN untuk dicoba lagi
                         realInput.value = "";
                         currentPinValue = "";
-                        for(let i=0; i<4; i++) {
-                            document.getElementById(`dot${i}`).classList.remove('filled');
-                            document.getElementById(`dot${i}`).textContent = '';
+                        for (let i = 0; i < 4; i++) {
+                            const dot = document.getElementById(`dot${i}`);
+                            dot.classList.remove('filled');
+                            dot.textContent = '';
+                            if (timeouts[i]) clearTimeout(timeouts[i]);
                         }
+                        isVerifying = false;
                         realInput.focus();
                     }
                 } catch (err) {
+                    pinLoadingOverlay.classList.remove('active');
+                    pinDotsContainer.style.opacity = '1';
                     errorMsg.textContent = "Kesalahan koneksi server.";
                     errorMsg.style.display = 'block';
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = "Verifikasi PIN";
+                    isVerifying = false;
+                    realInput.focus();
                 }
-            });
+            }
         }
 
         function openRegisterModal() {
