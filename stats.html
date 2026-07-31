@@ -8,7 +8,7 @@
     <link rel="shortcut icon" type="image/png" href="https://i.ibb.co.com/bj8dfFkL/pfp.png">
     <link rel="apple-touch-icon" href="https://i.ibb.co.com/bj8dfFkL/pfp.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Iconify Script -->
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
@@ -335,6 +335,11 @@
             const today = new Date();
             const normalizedToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
+            // Cek apakah bulan yang sedang dilihat adalah bulan di masa depan
+            const currentYearMonthVal = today.getFullYear() * 12 + today.getMonth();
+            const targetYearMonthVal = year * 12 + month;
+            const isFutureMonth = targetYearMonthVal > currentYearMonthVal;
+
             let workingDaysCount = 0;
             let filledCount = 0;
             let missingDays = [];
@@ -373,6 +378,10 @@
                 } else if (isHoliday) {
                     cellClass = 'heatmap-holiday';
                     tooltipText = `${day} ${ID_MONTHS[month]} ${year} - Libur: ${isHoliday}`;
+                } else if (isFutureMonth) {
+                    // Jika bulan di masa depan, tandai sebagai sel masa depan/non-aktif kerja
+                    cellClass = 'heatmap-future';
+                    tooltipText = `${day} ${ID_MONTHS[month]} ${year} (Bulan Mendatang)`;
                 } else if (isPastOrToday) {
                     if (hasData) {
                         cellClass = 'heatmap-filled';
@@ -394,7 +403,8 @@
 
             document.getElementById('heatmapGrid').innerHTML = heatmapHtml;
             
-            const completionRate = workingDaysCount > 0 ? Math.round((filledCount / workingDaysCount) * 100) : 100;
+            // Jika bulan depan, persentase dan hari kerja diset 0 / 100% netral
+            const completionRate = isFutureMonth ? 0 : (workingDaysCount > 0 ? Math.round((filledCount / workingDaysCount) * 100) : 100);
             
             const circle = document.getElementById('progressCircle');
             const radius = circle.r.baseVal.value;
@@ -403,20 +413,27 @@
             circle.style.strokeDasharray = `${circumference} ${circumference}`;
             circle.style.strokeDashoffset = offset;
 
-            document.getElementById('progressPercent').textContent = `${completionRate}%`;
-            document.getElementById('statFilled').textContent = filledCount;
-            document.getElementById('statMissing').textContent = missingDays.length;
-            document.getElementById('statWorkingDays').textContent = workingDaysCount;
-            document.getElementById('attendanceSummaryText').textContent = `${filledCount} dari ${workingDaysCount} hari kerja terisi`;
+            document.getElementById('progressPercent').textContent = isFutureMonth ? '0%' : `${completionRate}%`;
+            document.getElementById('statFilled').textContent = isFutureMonth ? 0 : filledCount;
+            document.getElementById('statMissing').textContent = isFutureMonth ? 0 : missingDays.length;
+            document.getElementById('statWorkingDays').textContent = isFutureMonth ? 0 : workingDaysCount;
+            document.getElementById('attendanceSummaryText').textContent = isFutureMonth ? 'Belumlah bro, masih bulan depan' : `${filledCount} dari ${workingDaysCount} hari kerja terisi`;
 
             const missingContainer = document.getElementById('missingListContainer');
-            document.getElementById('missingCountBadge').textContent = `${missingDays.length} hari`;
+            document.getElementById('missingCountBadge').textContent = isFutureMonth ? '0 hari' : `${missingDays.length} hari`;
 
-            if (missingDays.length > 0) {
+            if (isFutureMonth) {
+                missingContainer.innerHTML = `
+                    <div class="empty-missing">
+                        <iconify-icon icon="solar:clock-circle-bold" width="18" height="18"></iconify-icon>
+                        Sabar ya bro, belum waktunya presensi untuk bulan ini.
+                    </div>
+                `;
+            } else if (missingDays.length > 0) {
                 let missingHtml = '';
                 missingDays.forEach(item => {
                     missingHtml += `
-                        <div class="missing-item" onclick="window.location.href='dashboard.html'">
+                        <div class="missing-item" onclick="window.location.href='dashboard.html?date=${item.dateStr}'">
                             <div class="missing-date-info">
                                 <iconify-icon icon="solar:calendar-date-bold" width="16" height="16"></iconify-icon>
                                 ${item.day} ${item.monthName} ${year}
@@ -433,14 +450,19 @@
                 missingContainer.innerHTML = `
                     <div class="empty-missing">
                         <iconify-icon icon="solar:check-circle-bold" width="18" height="18"></iconify-icon>
-                         Sempurna! Tidak ada absensi yang terlewat bulan ini.
+                        Sempurna! Tidak ada absensi yang terlewat bulan ini.
                     </div>
                 `;
             }
 
-            const insightText = completionRate >= 90 
-                ? `Luar biasa! Konsistensi pengisian absensi kamu bulan ini sangat tinggi mencapai <strong>${completionRate}%</strong>. Pertahankan kebiasaan baik ini!`
-                : `Masih ada <strong>${missingDays.length} hari kerja</strong> yang belum dilengkapi keterangannya. Yuk segera lengkapi agar rekam jejak absensimu rapi!`;
+            let insightText = '';
+            if (isFutureMonth) {
+                insightText = `Bulan <strong>${ID_MONTHS[month]} ${year}</strong> masih di masa depan. Belum saatnya melakukan presensi, santai dulu bro!`;
+            } else if (completionRate >= 90) {
+                insightText = `Luar biasa! Konsistensi pengisian absensi kamu bulan ini sangat tinggi mencapai <strong>${completionRate}%</strong>. Pertahankan kebiasaan baik ini!`;
+            } else {
+                insightText = `Masih ada <strong>${missingDays.length} hari kerja</strong> yang belum dilengkapi keterangannya. Yuk segera lengkapi agar rekam jejak absensimu rapi!`;
+            }
             document.getElementById('insightContentText').innerHTML = insightText;
         }
 
